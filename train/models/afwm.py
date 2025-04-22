@@ -363,6 +363,21 @@ class RefinePyramid(nn.Module):
 
         return tuple(reversed(feature_list))
 
+class ResidualRefineBlock(nn.Module):
+    def __init__(self, in_channels=512):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels, 256, 3, 1, 1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, 3, 1, 1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 2, 3, 1, 1),
+        )
+
+    def forward(self, x):
+        return self.block(x)
+
+
 
 class AFlowNet(nn.Module):
     def __init__(self, num_pyramid, fpn_dim=256):
@@ -381,29 +396,10 @@ class AFlowNet(nn.Module):
 
         for i in range(num_pyramid):
 
-            netRefine_layer = torch.nn.Sequential(
-                torch.nn.Conv2d(2 * fpn_dim, out_channels=128, kernel_size=3, stride=1, padding=1),
-                torch.nn.LeakyReLU(inplace=False, negative_slope=0.1),
-                torch.nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1),
-                torch.nn.LeakyReLU(inplace=False, negative_slope=0.1),
-                torch.nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
-                torch.nn.LeakyReLU(inplace=False, negative_slope=0.1),
-                torch.nn.Conv2d(in_channels=32, out_channels=2, kernel_size=3, stride=1, padding=1)
-            )
-
-            style_block = StyledConvBlock(256, 49, latent_dim=256,
-                                         padding=padding_type, actvn=actvn,
-                                         normalize_affine_output=normalize_mlp,
-                                         modulated_conv=modulated_conv)
-
-            style_F_block = Styled_F_ConvBlock(49, 2, latent_dim=256,
-                                              padding=padding_type, actvn=actvn,
-                                              normalize_affine_output=normalize_mlp,
-                                              modulated_conv=modulated_conv)
-
-            self.netRefine.append(netRefine_layer)
-            self.netStyle.append(style_block)
-            self.netF.append(style_F_block)
+        refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)  # 512 input channels
+        self.netRefine.append(refine_layer)
+        self.netStyle.append(style_block)
+        self.netF.append(style_F_block)
 
         self.netRefine = nn.ModuleList(self.netRefine)
         self.netStyle = nn.ModuleList(self.netStyle)
