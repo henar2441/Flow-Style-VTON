@@ -395,19 +395,19 @@ class AFlowNet(nn.Module):
         for i in range(num_pyramid):
 
            refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)  # 512 input channels
-           self.netRefine.append(refine_layer)
+            self.netRefine.append(refine_layer)
 
             self.netStyle.append(style_block)
             self.netF.append(style_F_block)
 
 
-        self.netRefine = nn.ModuleList(self.netRefine)
-        self.netStyle = nn.ModuleList(self.netStyle)
-        self.netF = nn.ModuleList(self.netF)
+            self.netRefine = nn.ModuleList(self.netRefine)
+            self.netStyle = nn.ModuleList(self.netStyle)
+            self.netF = nn.ModuleList(self.netF)
 
-        self.cond_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
+            self.cond_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
 
-        self.image_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
+            self.image_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
 
 
     def forward(self, x, x_warps, x_conds, warp_feature=True):
