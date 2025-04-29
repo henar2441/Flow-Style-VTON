@@ -377,7 +377,7 @@ class ResidualRefineBlock(nn.Module):
 
 
 class AFlowNet(nn.Module):
-    def _init_(self, num_pyramid, fpn_dim=256):
+    def __init__(self, num_pyramid, fpn_dim=256):
        super(AFlowNet, self)._init_()
 
        padding_type = 'zero'
