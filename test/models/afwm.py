@@ -378,37 +378,37 @@ class ResidualRefineBlock(nn.Module):
 
 class AFlowNet(nn.Module):
     def _init_(self, num_pyramid, fpn_dim=256):
-    super(AFlowNet, self)._init_()
+       super(AFlowNet, self)._init_()
 
-    padding_type = 'zero'
-    actvn = 'lrelu'
-    normalize_mlp = False
-    modulated_conv = True
+       padding_type = 'zero'
+       actvn = 'lrelu'
+       normalize_mlp = False
+       modulated_conv = True
 
-    self.netRefine = []
-    self.netStyle = []
-    self.netF = []
+       self.netRefine = []
+       self.netStyle = []
+       self.netF = []
 
-    for i in range(num_pyramid):
-        refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)
-        self.netRefine.append(refine_layer)
+       for i in range(num_pyramid):
+         refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)
+         self.netRefine.append(refine_layer)
 
-        self.netStyle.append(style_block)
-        self.netF.append(style_F_block)
+         self.netStyle.append(style_block)
+         self.netF.append(style_F_block)
 
     # Move ModuleList creation OUTSIDE the loop
-    self.netRefine = nn.ModuleList(self.netRefine)
-    self.netStyle = nn.ModuleList(self.netStyle)
-    self.netF = nn.ModuleList(self.netF)
+       self.netRefine = nn.ModuleList(self.netRefine)
+       self.netStyle = nn.ModuleList(self.netStyle)
+       self.netF = nn.ModuleList(self.netF)
 
-    self.cond_style = nn.Sequential(
-        nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
-        nn.LeakyReLU(inplace=False, negative_slope=0.1)
+       self.cond_style = nn.Sequential(
+          nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
+          nn.LeakyReLU(inplace=False, negative_slope=0.1)
     )
 
-    self.image_style = nn.Sequential(
-        nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
-        nn.LeakyReLU(inplace=False, negative_slope=0.1)
+       self.image_style = nn.Sequential(
+          nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
+          nn.LeakyReLU(inplace=False, negative_slope=0.1)
     )
 
     def forward(self, x, x_warps, x_conds, warp_feature=True):
