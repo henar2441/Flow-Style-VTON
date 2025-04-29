@@ -377,38 +377,39 @@ class ResidualRefineBlock(nn.Module):
 
 
 class AFlowNet(nn.Module):
-    def __init__(self, num_pyramid, fpn_dim=256):
-        super(AFlowNet, self).__init__()
+    def _init_(self, num_pyramid, fpn_dim=256):
+    super(AFlowNet, self)._init_()
 
-        padding_type='zero'
-        actvn = 'lrelu'
-        normalize_mlp = False
-        modulated_conv = True
+    padding_type = 'zero'
+    actvn = 'lrelu'
+    normalize_mlp = False
+    modulated_conv = True
 
+    self.netRefine = []
+    self.netStyle = []
+    self.netF = []
 
-        self.netRefine = []
+    for i in range(num_pyramid):
+        refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)
+        self.netRefine.append(refine_layer)
 
-        self.netStyle = []
+        self.netStyle.append(style_block)
+        self.netF.append(style_F_block)
 
-        self.netF = []
+    # Move ModuleList creation OUTSIDE the loop
+    self.netRefine = nn.ModuleList(self.netRefine)
+    self.netStyle = nn.ModuleList(self.netStyle)
+    self.netF = nn.ModuleList(self.netF)
 
-        for i in range(num_pyramid):
+    self.cond_style = nn.Sequential(
+        nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
+        nn.LeakyReLU(inplace=False, negative_slope=0.1)
+    )
 
-           refine_layer = ResidualRefineBlock(in_channels=2 * fpn_dim)  # 512 input channels
-           self.netRefine.append(refine_layer)
-
-           self.netStyle.append(style_block)
-           self.netF.append(style_F_block)
-
-
-           self.netRefine = nn.ModuleList(self.netRefine)
-           self.netStyle = nn.ModuleList(self.netStyle)
-           self.netF = nn.ModuleList(self.netF)
-
-           self.cond_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
-
-           self.image_style = torch.nn.Sequential(torch.nn.Conv2d(256, 128, kernel_size=(8,6), stride=1, padding=0), torch.nn.LeakyReLU(inplace=False, negative_slope=0.1))
-
+    self.image_style = nn.Sequential(
+        nn.Conv2d(256, 128, kernel_size=(8, 6), stride=1, padding=0),
+        nn.LeakyReLU(inplace=False, negative_slope=0.1)
+    )
 
     def forward(self, x, x_warps, x_conds, warp_feature=True):
         last_flow = None
